@@ -45,13 +45,10 @@ export default function App(): React.JSX.Element {
         <SceneLight />
 
         <XR store={store}>
-          {/* ОБЕРТКА ФИЗИКИ: Все твердые тела должны быть внутри компонента Physics */}
           <Physics gravity={[0, -9.81, 0]}>
             <Floor onTeleport={handleTeleport} />
             <Table />
 
-            {/* Теперь мы можем добавить сколько угодно кубов, и они будут сталкиваться! */}
-            <GrabCube />
             <GrabCube />
           </Physics>
 
