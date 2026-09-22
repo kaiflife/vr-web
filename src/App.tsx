@@ -7,7 +7,7 @@ import { Physics } from "@react-three/rapier"; // Импортируем физ�
 import SceneLight from "./components/SceneLight";
 import Floor from "./components/Floor";
 import Table from "./components/Table";
-import GrabCube from "./components/GrabCube";
+import { DraggableCubeWithRotation } from "./components/DraggableCubeWithRotation";
 
 const store = createXRStore();
 
@@ -48,8 +48,7 @@ export default function App(): React.JSX.Element {
           <Physics gravity={[0, -9.81, 0]}>
             <Floor onTeleport={handleTeleport} />
             <Table />
-
-            <GrabCube />
+            <DraggableCubeWithRotation />
           </Physics>
 
           <group position={playerOffset} />
