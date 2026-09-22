@@ -1,0 +1,9 @@
+{
+  "git.ignoreLimitWarning": true,
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.oxc": "always"
+  },
+  "js/ts.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": true,
+  "js/ts.preferences.useAliasesForRenames": true
+}
