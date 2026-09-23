@@ -1,7 +1,7 @@
 import React from "react";
 import { RigidBody } from "@react-three/rapier";
 
-export default function Table(): React.JSX.Element {
+export function Table(): React.JSX.Element {
   return (
     <RigidBody type="fixed">
       <mesh position={[0, 0.45, -1.5]}>

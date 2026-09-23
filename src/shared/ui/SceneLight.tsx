@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function SceneLight(): React.JSX.Element {
+export function SceneLight(): React.JSX.Element {
   return (
     <>
       <ambientLight intensity={0.7} />

@@ -12,14 +12,11 @@ export function DraggableCubeWithRotation(): React.JSX.Element {
     "dynamic" | "kinematicPosition"
   >("dynamic");
 
-  // Запоминаем, какая именно рука держит куб ('left' или 'right')
   const [holdingHand, setHoldingHand] = useState<"left" | "right" | null>(null);
 
-  // Подключаем честные XR-состояния контроллеров v6
   const leftController = useXRInputSourceState("controller", "left");
   const rightController = useXRInputSourceState("controller", "right");
 
-  // Определяем активный контроллер на основе того, какой рукой держим
   const activeControllerState =
     holdingHand === "right" ? rightController : leftController;
 
@@ -32,12 +29,11 @@ export function DraggableCubeWithRotation(): React.JSX.Element {
   const localPositionOffset = useRef(new THREE.Vector3());
   const finalPosition = useRef(new THREE.Vector3());
 
-  // 1. НАЧАЛО ЗАХВАТА
   const handleSelectStart = (event: ThreeEvent<PointerEvent>): void => {
     event.stopPropagation();
     if (!rbRef.current) return;
 
-    // Безопасно определяем руку из WebXR-события v6
+    // определяем руку из WebXR-события v6
     const hand = (event.nativeEvent as any).inputSource?.handedness || "right";
 
     // Выбираем нужный контроллер напрямую из стейта библиотеки
@@ -94,7 +90,7 @@ export function DraggableCubeWithRotation(): React.JSX.Element {
 
     const xrObject = activeControllerState.object;
 
-    // Считываем честное мировое вращение и позицию из шлема
+    // Считываем мировое вращение и позицию из шлема
     xrObject.getWorldQuaternion(controllerQuaternion.current);
     xrObject.getWorldPosition(controllerPosition.current);
 
@@ -146,7 +142,7 @@ export function DraggableCubeWithRotation(): React.JSX.Element {
       >
         <boxGeometry args={[0.3, 0.3, 0.3]} />
         <meshStandardMaterial
-          color={holdingHand ? "#4CAF50" : "#FF5722"}
+          color={"#FF5722"}
           roughness={0.2}
           metalness={0.1}
         />

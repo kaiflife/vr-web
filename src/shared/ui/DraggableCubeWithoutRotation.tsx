@@ -3,7 +3,7 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { RigidBody } from "@react-three/rapier";
 import type { RapierRigidBody } from "@react-three/rapier";
 
-export default function DraggableCubeWithoutRotation(): React.JSX.Element {
+export function DraggableCubeWithoutRotation(): React.JSX.Element {
   const rbRef = useRef<RapierRigidBody>(null);
   const [physicsType, setPhysicsType] = useState<
     "dynamic" | "kinematicPosition"
@@ -26,8 +26,6 @@ export default function DraggableCubeWithoutRotation(): React.JSX.Element {
     event.stopPropagation();
 
     if (!isHolding.current || !rbRef.current || !event.point) return;
-
-    console.log("event", event);
 
     // Переносим физическое тело куба строго в точку, куда указывает лазер
     rbRef.current.setNextKinematicTranslation({
