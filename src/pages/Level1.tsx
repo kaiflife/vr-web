@@ -8,13 +8,15 @@ import {
 } from "@/shared";
 import { useState, type JSX } from "react";
 
+const CUBE_NAME = "cube-level1";
+
 export function Level1(): JSX.Element {
   const [activeCubes, setActiveCubes] = useState<string[]>([]);
 
   const handleCubesChange = (cubes: string[]) => {
     setActiveCubes(cubes);
 
-    if (cubes.includes("cube-red") && cubes.includes("cube-blue")) {
+    if (cubes.includes(CUBE_NAME)) {
       console.log("ЗАГАДКА РЕШЕНА! Оба куба на месте.");
     }
   };
@@ -32,6 +34,7 @@ export function Level1(): JSX.Element {
         position={[-0.2, 0.6, -1.5]}
         size={[0.3, 0.2, 0.3]}
         onActiveCubesChange={handleCubesChange}
+        successName={CUBE_NAME}
       />
       <StaticText
         position={[0, 1, -4]}
@@ -44,10 +47,7 @@ export function Level1(): JSX.Element {
         text={`Активные кубы: ${activeCubes}`}
       />
       <Table name={"table"} />
-      <DraggableCubeWithRotation
-        position={[0.3, 1.5, -1.5]}
-        name="cube-level1"
-      />
+      <DraggableCubeWithRotation position={[0.3, 1.5, -1.5]} name={CUBE_NAME} />
     </group>
   );
 }

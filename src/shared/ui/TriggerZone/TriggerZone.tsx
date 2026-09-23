@@ -12,6 +12,7 @@ interface TriggerZoneProps {
   size: [number, number, number]; // [ширина, высота, длина] зоны триггера
   onActiveCubesChange?: (cubeNames: string[]) => void; // Колбэк, передающий список кубов внутри
   soundPath?: string;
+  successName: string;
 }
 
 const DEFAULT_ZONE_SOUNDS = "/sounds/success.mp3";
@@ -21,6 +22,7 @@ export function TriggerZone({
   size,
   onActiveCubesChange,
   soundPath = DEFAULT_ZONE_SOUNDS, // Задаем дефолтное значение
+  successName,
 }: TriggerZoneProps): React.JSX.Element {
   const [itemsInZone, setItemsInZone] = useState<Set<string>>(new Set());
 
@@ -30,7 +32,7 @@ export function TriggerZone({
     // Получаем имя объекта, который зашел в триггер (зададим его на кубах)
     const targetName = event.other.rigidBodyObject?.name;
 
-    if (targetName && targetName.startsWith("cube-")) {
+    if (targetName && targetName === successName) {
       const audioNode = audioRefs.current;
 
       if (audioNode) {
