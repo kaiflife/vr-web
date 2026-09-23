@@ -16,7 +16,7 @@ export function Level2(): JSX.Element {
         rotation={FLOOR_HORIZONTAL_ROTATION}
       />
       <Table />
-      <DraggableCubeWithRotation />
+      <DraggableCubeWithRotation name={"cube-level2"} />
     </>
   );
 }

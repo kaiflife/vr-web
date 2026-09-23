@@ -1,12 +1,20 @@
-import React, { useRef, useState } from "react";
-import type { ThreeEvent } from "@react-three/fiber";
+import { useRef, useState, type JSX } from "react";
+import type { ThreeElements, ThreeEvent } from "@react-three/fiber";
 import { useFrame } from "@react-three/fiber";
 import { useXRInputSourceState } from "@react-three/xr";
 import { RigidBody } from "@react-three/rapier";
 import type { RapierRigidBody } from "@react-three/rapier";
 import * as THREE from "three";
 
-export function DraggableCubeWithRotation(): React.JSX.Element {
+interface IDraggableCubeWithRotation {
+  name: string;
+  position: ThreeElements["object3D"]["position"];
+}
+
+export function DraggableCubeWithRotation({
+  name,
+  position,
+}: IDraggableCubeWithRotation): JSX.Element {
   const rbRef = useRef<RapierRigidBody>(null);
   const [physicsType, setPhysicsType] = useState<
     "dynamic" | "kinematicPosition"
@@ -132,8 +140,9 @@ export function DraggableCubeWithRotation(): React.JSX.Element {
     <RigidBody
       ref={rbRef}
       type={physicsType}
-      position={[0, 1.5, -1.5]}
+      position={position}
       colliders="cuboid"
+      name={name}
     >
       <mesh
         onPointerDown={handleSelectStart}
