@@ -4,23 +4,25 @@ import React from "react";
 import type { ThreeElements } from "@react-three/fiber";
 import { useGameStore } from "@/entities";
 
-interface FloorProps {
+interface PlatformProps {
   isTeleportable?: boolean;
 
   size: [number, number];
   position: [number, number, number]; // [x, y, z]
   rotation: ThreeElements["object3D"]["rotation"];
+  name: string;
 }
 
-export function Floor({
+export function Platform({
   isTeleportable = true,
   size,
   position,
+  name,
   rotation,
-}: FloorProps): React.JSX.Element {
+}: PlatformProps): React.JSX.Element {
   const setPlayerPosition = useGameStore((state) => state.setPlayerPosition);
 
-  const floorMesh = (
+  const platformMesh = (
     <mesh>
       <planeGeometry args={size} />
       <meshStandardMaterial color="#37474F" />
@@ -28,13 +30,13 @@ export function Floor({
   );
 
   return (
-    <RigidBody type="fixed" position={position} rotation={rotation}>
+    <RigidBody type="fixed" name={name} position={position} rotation={rotation}>
       {isTeleportable ? (
         <TeleportTarget onTeleport={setPlayerPosition}>
-          {floorMesh}
+          {platformMesh}
         </TeleportTarget>
       ) : (
-        floorMesh
+        platformMesh
       )}
     </RigidBody>
   );

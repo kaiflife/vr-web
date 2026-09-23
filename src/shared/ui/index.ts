@@ -1,4 +1,4 @@
-export * from "./Floor";
+export * from "./Platform";
 export * from "./DraggableCubeWithRotation";
 export * from "./DraggableCubeWithoutRotation";
 export * from "./SceneLight";

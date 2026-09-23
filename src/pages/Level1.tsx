@@ -1,6 +1,6 @@
 import {
-  Floor,
-  FLOOR_HORIZONTAL_ROTATION,
+  Platform,
+  PLATFORM_HORIZONTAL_ROTATION,
   Table,
   DraggableCubeWithRotation,
   TriggerZone,
@@ -21,11 +21,12 @@ export function Level1(): JSX.Element {
 
   return (
     <group>
-      <Floor
+      <Platform
+        name="floor"
         isTeleportable
         size={[5, 5]}
         position={[0, 0, -1.5]}
-        rotation={FLOOR_HORIZONTAL_ROTATION}
+        rotation={PLATFORM_HORIZONTAL_ROTATION}
       />
       <TriggerZone
         position={[-0.2, 0.6, -1.5]}
@@ -42,7 +43,7 @@ export function Level1(): JSX.Element {
         position={[2, 1, -4]}
         text={`Активные кубы: ${activeCubes}`}
       />
-      <Table />
+      <Table name={"table"} />
       <DraggableCubeWithRotation
         position={[0.3, 1.5, -1.5]}
         name="cube-level1"

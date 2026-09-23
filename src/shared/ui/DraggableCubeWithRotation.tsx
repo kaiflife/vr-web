@@ -1,20 +1,31 @@
-import { useRef, useState, type JSX } from "react";
+import { Suspense, useRef, useState, type JSX } from "react";
 import type { ThreeElements, ThreeEvent } from "@react-three/fiber";
 import { useFrame } from "@react-three/fiber";
 import { useXRInputSourceState } from "@react-three/xr";
 import { RigidBody } from "@react-three/rapier";
-import type { RapierRigidBody } from "@react-three/rapier";
+import type {
+  CollisionEnterPayload,
+  RapierRigidBody,
+} from "@react-three/rapier";
 import * as THREE from "three";
+import { PositionalAudio } from "@react-three/drei";
 
 interface IDraggableCubeWithRotation {
   name: string;
   position: ThreeElements["object3D"]["position"];
 }
 
+const MATERIAL_SOUNDS = {
+  floor: "/sounds/cubeDrop2.mp3",
+  table: "/sounds/cubeDrop2.mp3",
+} as const;
+
 export function DraggableCubeWithRotation({
   name,
   position,
 }: IDraggableCubeWithRotation): JSX.Element {
+  const audioRefs = useRef<Record<string, THREE.PositionalAudio | null>>({});
+
   const rbRef = useRef<RapierRigidBody>(null);
   const [physicsType, setPhysicsType] = useState<
     "dynamic" | "kinematicPosition"
@@ -86,6 +97,39 @@ export function DraggableCubeWithRotation({
     event.target.setPointerCapture(event.pointerId);
   };
 
+  const handleCollision = (event: CollisionEnterPayload) => {
+    // 1. Определяем имя объекта, с которым столкнулся куб
+    const collisionTargetName = event.other.rigidBodyObject?.name;
+
+    // Проверяем, есть ли у нас звук для этой поверхности
+    if (collisionTargetName && collisionTargetName in MATERIAL_SOUNDS) {
+      const hitVelocity = event.target.rigidBody?.linvel();
+
+      if (hitVelocity) {
+        // 2. Считаем силу удара
+        const speed = Math.sqrt(
+          hitVelocity.x ** 2 + hitVelocity.y ** 2 + hitVelocity.z ** 2,
+        );
+
+        // Играем звук только при достаточно сильном ударе
+        if (speed > 0.4) {
+          // Находим аудио-ноду строго по имени столкнувшегося объекта
+          const audioNode = audioRefs.current[collisionTargetName];
+
+          if (audioNode) {
+            if (audioNode.isPlaying) audioNode.stop();
+
+            // Динамически настраиваем громкость от скорости падения
+            const volume = Math.min(speed / 4, 1.0);
+            audioNode.setVolume(volume);
+
+            audioNode.play();
+          }
+        }
+      }
+    }
+  };
+
   // 2. ОБНОВЛЕНИЕ КАЖДЫЙ КАДР
   useFrame(() => {
     if (
@@ -143,6 +187,7 @@ export function DraggableCubeWithRotation({
       position={position}
       colliders="cuboid"
       name={name}
+      onCollisionEnter={handleCollision}
     >
       <mesh
         onPointerDown={handleSelectStart}
@@ -156,6 +201,19 @@ export function DraggableCubeWithRotation({
           metalness={0.1}
         />
       </mesh>
+      <Suspense fallback={null}>
+        {Object.entries(MATERIAL_SOUNDS).map(([surfaceName, url]) => (
+          <PositionalAudio
+            key={surfaceName}
+            url={url}
+            ref={(el) => {
+              audioRefs.current[surfaceName] = el;
+            }}
+            distance={1.5}
+            loop={false}
+          />
+        ))}
+      </Suspense>
     </RigidBody>
   );
 }
