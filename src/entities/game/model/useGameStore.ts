@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import * as THREE from "three";
 
-export type LevelType = "level1" | "level2";
+export type LevelType = "level0" | "level1" | "level2";
 
 interface GameState {
   playerPosition: THREE.Vector3;

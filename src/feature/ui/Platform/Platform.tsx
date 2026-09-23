@@ -13,6 +13,8 @@ interface PlatformProps {
   rotation: ThreeElements["object3D"]["rotation"];
   name: string;
   soundPath?: string; // Кастомный путь к звуку, если нужен
+  onTeleport?: () => void;
+  color?: string;
 }
 
 const DEFAULT_TELEPORT_SOUND = "/sounds/teleport.mp3"; // Путь к вашему файлу звука
@@ -21,9 +23,11 @@ export function Platform({
   isTeleportable = true,
   size,
   position,
+  color = "#37474F",
   name,
   rotation,
   soundPath = DEFAULT_TELEPORT_SOUND,
+  onTeleport,
 }: PlatformProps): React.JSX.Element {
   const setPlayerPosition = useGameStore((state) => state.setPlayerPosition);
   const audioRef = useRef<THREE.PositionalAudio | null>(null);
@@ -37,12 +41,13 @@ export function Platform({
     }
 
     setPlayerPosition(targetPosition);
+    onTeleport?.();
   };
 
   const platformMesh = (
     <mesh>
       <planeGeometry args={size} />
-      <meshStandardMaterial color="#37474F" />
+      <meshStandardMaterial color={color} />
     </mesh>
   );
 
