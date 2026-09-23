@@ -6,6 +6,7 @@ import {
   TriggerZone,
   StaticText,
 } from "@/feature";
+import { DeadZone } from "@/feature/ui/DeadZone";
 import { useState, type JSX } from "react";
 
 const CUBE_NAME = "cube-level1";
@@ -25,15 +26,6 @@ export function Level1(): JSX.Element {
     }
   };
 
-  const triggerDeadZone = (cubes: string[], rigidBody) => {
-    if (cubes.includes(CUBE_NAME)) {
-      rigidBody.setTranslation(
-        { x: CUBE_POSITION[0], y: CUBE_POSITION[1], z: CUBE_POSITION[2] },
-        true,
-      );
-    }
-  };
-
   return (
     <group>
       <Platform
@@ -44,20 +36,15 @@ export function Level1(): JSX.Element {
         rotation={PLATFORM_HORIZONTAL_ROTATION}
       />
       <TriggerZone
+        visible
         position={[-0.2, 0.6, -1.5]}
         size={[0.3, 0.2, 0.3]}
-        onActiveCubesChange={handleCubesChange}
+        color="red"
+        onTrigger={handleCubesChange}
         triggerNames={TRIGGER_ITEMS}
         soundPath="/sounds/success.mp3"
       />
-      <TriggerZone
-        position={[-0.2, -2, -1.5]}
-        size={[20, 0.1, 20]}
-        color="red"
-        onActiveCubesChange={triggerDeadZone}
-        triggerNames={TRIGGER_ITEMS}
-        soundPath="/sounds/resetPosition.mp3"
-      />
+      <DeadZone triggerNames={TRIGGER_ITEMS} />
       <StaticText
         position={[0, 1, -4]}
         text={
@@ -69,7 +56,12 @@ export function Level1(): JSX.Element {
         text={`Активные кубы: ${activeCubes}`}
       />
       <Table name={"table"} />
-      <DraggableCubeWithRotation position={[-1, -1, -1]} name={CUBE_NAME} />
+      <DraggableCubeWithRotation
+        color={"red"}
+        position={[-1, -1, -1]}
+        initialPosition={CUBE_POSITION}
+        name={CUBE_NAME}
+      />
     </group>
   );
 }

@@ -13,6 +13,9 @@ import { PositionalAudio } from "@react-three/drei";
 interface IDraggableCubeWithRotation {
   name: string;
   position: ThreeElements["object3D"]["position"];
+  initialPosition: ThreeElements["object3D"]["position"];
+
+  color: string;
 }
 
 const MATERIAL_SOUNDS = {
@@ -23,6 +26,8 @@ const MATERIAL_SOUNDS = {
 export function DraggableCubeWithRotation({
   name,
   position,
+  initialPosition,
+  color,
 }: IDraggableCubeWithRotation): JSX.Element {
   const audioRefs = useRef<Record<string, THREE.PositionalAudio | null>>({});
 
@@ -185,6 +190,7 @@ export function DraggableCubeWithRotation({
       ref={rbRef}
       type={physicsType}
       position={position}
+      userData={{ initialPosition }}
       colliders="cuboid"
       name={name}
       onCollisionEnter={handleCollision}
@@ -195,11 +201,7 @@ export function DraggableCubeWithRotation({
         pointerEvents="auto"
       >
         <boxGeometry args={[0.3, 0.3, 0.3]} />
-        <meshStandardMaterial
-          color={"#FF5722"}
-          roughness={0.2}
-          metalness={0.1}
-        />
+        <meshStandardMaterial color={color} roughness={0.2} metalness={0.1} />
       </mesh>
       <Suspense fallback={null}>
         {Object.entries(MATERIAL_SOUNDS).map(([surfaceName, url]) => (

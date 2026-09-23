@@ -1,3 +1,4 @@
+import type { CustomRapierRigidBody } from "@/shared";
 import { PositionalAudio } from "@react-three/drei";
 import {
   RigidBody,
@@ -10,22 +11,21 @@ import * as THREE from "three";
 interface TriggerZoneProps {
   position: [number, number, number];
   size: [number, number, number]; // [ширина, высота, длина] зоны триггера
-  onActiveCubesChange?: (
-    cubeNames: string[],
-    rigidBodyObject?: THREE.Object3D<THREE.Object3DEventMap> | undefined,
-  ) => void; // Колбэк, передающий список кубов внутри
+  onTrigger?: (cubeNames: string[], rigidBody?: CustomRapierRigidBody) => void; // Колбэк, передающий список кубов внутри
   soundPath: string;
   triggerNames: Set<string>;
-  color?: string;
+  color: string;
+  visible: boolean;
 }
 
 export function TriggerZone({
   position,
   size,
-  onActiveCubesChange,
+  onTrigger,
   soundPath,
   triggerNames,
-  color = "#00ff00",
+  color,
+  visible,
 }: TriggerZoneProps): React.JSX.Element {
   const [itemsInZone, setItemsInZone] = useState<Set<string>>(new Set());
 
@@ -48,10 +48,10 @@ export function TriggerZone({
       setItemsInZone((prev) => {
         const next = new Set(prev).add(targetName);
 
-        if (onActiveCubesChange) {
+        if (onTrigger) {
           const rigidBody = event?.other?.rigidBody;
 
-          onActiveCubesChange(Array.from(next), rigidBody);
+          onTrigger(Array.from(next), rigidBody as CustomRapierRigidBody);
         }
 
         return next;
@@ -66,7 +66,9 @@ export function TriggerZone({
       setItemsInZone((prev) => {
         const next = new Set(prev);
         next.delete(targetName);
-        if (onActiveCubesChange) onActiveCubesChange(Array.from(next));
+
+        if (onTrigger) onTrigger(Array.from(next));
+
         return next;
       });
     }
@@ -83,8 +85,13 @@ export function TriggerZone({
     >
       <mesh>
         <boxGeometry args={size} />
-        {/* Делаем зону слегка видимой зеленоватой для отладки, потом можно убрать (visible={false}) */}
-        <meshBasicMaterial color={color} transparent opacity={0.1} wireframe />
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={0.1}
+          wireframe
+          visible={visible}
+        />
       </mesh>
 
       <PositionalAudio
