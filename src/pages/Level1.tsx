@@ -5,10 +5,14 @@ import {
   DraggableCubeWithRotation,
   TriggerZone,
   StaticText,
-} from "@/shared";
+} from "@/feature";
 import { useState, type JSX } from "react";
 
 const CUBE_NAME = "cube-level1";
+
+const TRIGGER_ITEMS = new Set([CUBE_NAME]);
+
+const CUBE_POSITION: [number, number, number] = [0.3, 1.5, -1.5];
 
 export function Level1(): JSX.Element {
   const [activeCubes, setActiveCubes] = useState<string[]>([]);
@@ -18,6 +22,15 @@ export function Level1(): JSX.Element {
 
     if (cubes.includes(CUBE_NAME)) {
       console.log("ЗАГАДКА РЕШЕНА! Оба куба на месте.");
+    }
+  };
+
+  const triggerDeadZone = (cubes: string[], rigidBody) => {
+    if (cubes.includes(CUBE_NAME)) {
+      rigidBody.setTranslation(
+        { x: CUBE_POSITION[0], y: CUBE_POSITION[1], z: CUBE_POSITION[2] },
+        true,
+      );
     }
   };
 
@@ -34,7 +47,16 @@ export function Level1(): JSX.Element {
         position={[-0.2, 0.6, -1.5]}
         size={[0.3, 0.2, 0.3]}
         onActiveCubesChange={handleCubesChange}
-        successName={CUBE_NAME}
+        triggerNames={TRIGGER_ITEMS}
+        soundPath="/sounds/success.mp3"
+      />
+      <TriggerZone
+        position={[-0.2, -2, -1.5]}
+        size={[20, 0.1, 20]}
+        color="red"
+        onActiveCubesChange={triggerDeadZone}
+        triggerNames={TRIGGER_ITEMS}
+        soundPath="/sounds/resetPosition.mp3"
       />
       <StaticText
         position={[0, 1, -4]}
@@ -47,7 +69,7 @@ export function Level1(): JSX.Element {
         text={`Активные кубы: ${activeCubes}`}
       />
       <Table name={"table"} />
-      <DraggableCubeWithRotation position={[0.3, 1.5, -1.5]} name={CUBE_NAME} />
+      <DraggableCubeWithRotation position={[-1, -1, -1]} name={CUBE_NAME} />
     </group>
   );
 }

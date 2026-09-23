@@ -9,7 +9,7 @@ import { DEFAULT_CAMERA } from "./constants";
 import { useGameStore } from "@/entities";
 import { LEVEL_COMPONENTS } from "@/app/config/levels";
 import { xrStore } from "@/app/model/xtStore";
-import { SceneLight } from "@/shared";
+import { SceneLight } from "@/feature";
 
 export default function App(): React.JSX.Element {
   const playerPosition = useGameStore((state) => state.playerPosition);
