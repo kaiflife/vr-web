@@ -8,7 +8,6 @@ import {
 } from "@/feature";
 import { DeadZone } from "@/feature/ui/DeadZone";
 import { SOUNDS, useTimeout } from "@/shared";
-import { PositionalAudio } from "@react-three/drei";
 import { useRef, type JSX } from "react";
 import * as THREE from "three";
 
