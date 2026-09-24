@@ -5,6 +5,7 @@ import type { ThreeElements } from "@react-three/fiber";
 import { useGameStore } from "@/entities";
 import { PositionalAudio } from "@react-three/drei";
 import * as THREE from "three";
+import { SOUNDS } from "@/shared";
 
 interface PlatformProps {
   isTeleportable?: boolean;
@@ -17,7 +18,7 @@ interface PlatformProps {
   color?: string;
 }
 
-const DEFAULT_TELEPORT_SOUND = "/sounds/teleport.mp3"; // Путь к вашему файлу звука
+const DEFAULT_TELEPORT_SOUND = SOUNDS.teleport;
 
 export function Platform({
   isTeleportable = true,

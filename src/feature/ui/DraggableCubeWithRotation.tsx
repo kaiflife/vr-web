@@ -9,6 +9,7 @@ import type {
 } from "@react-three/rapier";
 import * as THREE from "three";
 import { PositionalAudio } from "@react-three/drei";
+import { SOUNDS } from "@/shared";
 
 interface IDraggableCubeWithRotation {
   name: string;
@@ -19,8 +20,9 @@ interface IDraggableCubeWithRotation {
 }
 
 const MATERIAL_SOUNDS = {
-  floor: "/sounds/cubeDrop2.mp3",
-  table: "/sounds/cubeDrop2.mp3",
+  floor: SOUNDS.cubeDrop2,
+  table: SOUNDS.cubeDrop2,
+  player: SOUNDS.grab,
 } as const;
 
 export function DraggableCubeWithRotation({
@@ -55,6 +57,7 @@ export function DraggableCubeWithRotation({
 
   const handleSelectStart = (event: ThreeEvent<PointerEvent>): void => {
     event.stopPropagation();
+
     if (!rbRef.current) return;
 
     // определяем руку из WebXR-события v6
@@ -63,6 +66,7 @@ export function DraggableCubeWithRotation({
     // Выбираем нужный контроллер напрямую из стейта библиотеки
     const currentControllerState =
       hand === "right" ? rightController : leftController;
+
     if (!currentControllerState || !currentControllerState.object) return;
 
     setHoldingHand(hand);
@@ -99,6 +103,14 @@ export function DraggableCubeWithRotation({
       .sub(controllerPosition.current)
       .applyQuaternion(controllerQuaternion.current.clone().invert());
 
+    const audioNode = audioRefs.current.player;
+
+    if (audioNode) {
+      if (audioNode.isPlaying) audioNode.stop();
+
+      audioNode.play();
+    }
+
     event.target.setPointerCapture(event.pointerId);
   };
 
@@ -108,29 +120,15 @@ export function DraggableCubeWithRotation({
 
     // Проверяем, есть ли у нас звук для этой поверхности
     if (collisionTargetName && collisionTargetName in MATERIAL_SOUNDS) {
-      const hitVelocity = event.target.rigidBody?.linvel();
+      // Находим аудио-ноду строго по имени столкнувшегося объекта
+      const audioNode = audioRefs.current[collisionTargetName];
 
-      if (hitVelocity) {
-        // 2. Считаем силу удара
-        const speed = Math.sqrt(
-          hitVelocity.x ** 2 + hitVelocity.y ** 2 + hitVelocity.z ** 2,
-        );
+      if (audioNode) {
+        if (audioNode.isPlaying) audioNode.stop();
 
-        // Играем звук только при достаточно сильном ударе
-        if (speed > 0.4) {
-          // Находим аудио-ноду строго по имени столкнувшегося объекта
-          const audioNode = audioRefs.current[collisionTargetName];
+        audioNode.setVolume(1.0);
 
-          if (audioNode) {
-            if (audioNode.isPlaying) audioNode.stop();
-
-            // Динамически настраиваем громкость от скорости падения
-            const volume = Math.min(speed / 4, 1.0);
-            audioNode.setVolume(volume);
-
-            audioNode.play();
-          }
-        }
+        audioNode.play();
       }
     }
   };

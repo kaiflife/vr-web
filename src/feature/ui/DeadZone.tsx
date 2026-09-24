@@ -1,5 +1,5 @@
 import { TriggerZone } from "@/feature/ui/TriggerZone/TriggerZone";
-import type { CustomRapierRigidBody } from "@/shared";
+import { SOUNDS, type CustomRapierRigidBody } from "@/shared";
 
 interface IProps {
   triggerNames: Set<string>;
@@ -30,7 +30,7 @@ export const DeadZone = ({ triggerNames }: IProps) => {
       color="red"
       onTrigger={triggerDeadZone}
       triggerNames={triggerNames}
-      soundPath="/sounds/resetPosition.mp3"
+      soundPath={SOUNDS.resetPosition}
     />
   );
 };
