@@ -1,6 +1,5 @@
 export * from "./Platform";
-export * from "./DraggableCubeWithRotation";
-export * from "./DraggableCubeWithoutRotation";
+export * from "./DraggableCube";
 export * from "./SceneLight";
 export * from "./Table";
 export { TriggerZone } from "./TriggerZone/TriggerZone";

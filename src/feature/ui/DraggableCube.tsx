@@ -2,7 +2,7 @@ import { Suspense, useRef, useState, type JSX } from "react";
 import type { ThreeElements, ThreeEvent } from "@react-three/fiber";
 import { useFrame } from "@react-three/fiber";
 import { useXRInputSourceState } from "@react-three/xr";
-import { RigidBody } from "@react-three/rapier";
+import { CuboidCollider, RigidBody } from "@react-three/rapier";
 import type {
   CollisionEnterPayload,
   RapierRigidBody,
@@ -10,12 +10,12 @@ import type {
 import * as THREE from "three";
 import { PositionalAudio } from "@react-three/drei";
 import { SOUNDS } from "@/shared";
+import { ActiveCollisionTypes } from "@dimforge/rapier3d-compat";
 
-interface IDraggableCubeWithRotation {
+interface IDraggableCube {
   name: string;
   position: ThreeElements["object3D"]["position"];
   initialPosition: ThreeElements["object3D"]["position"];
-
   color: string;
 }
 
@@ -25,12 +25,12 @@ const MATERIAL_SOUNDS = {
   player: SOUNDS.grab,
 } as const;
 
-export function DraggableCubeWithRotation({
+export function DraggableCube({
   name,
   position,
   initialPosition,
   color,
-}: IDraggableCubeWithRotation): JSX.Element {
+}: IDraggableCube): JSX.Element {
   const audioRefs = useRef<Record<string, THREE.PositionalAudio | null>>({});
 
   const rbRef = useRef<RapierRigidBody>(null);
@@ -72,7 +72,7 @@ export function DraggableCubeWithRotation({
     setHoldingHand(hand);
     setPhysicsType("kinematicPosition");
 
-    const xrObject = currentControllerState.object; // Это настоящий THREE.Group контроллера
+    const xrObject = currentControllerState.object;
 
     // Считываем честные трансформации контроллера
     xrObject.getWorldQuaternion(controllerQuaternion.current);
@@ -107,7 +107,6 @@ export function DraggableCubeWithRotation({
 
     if (audioNode) {
       if (audioNode.isPlaying) audioNode.stop();
-
       audioNode.play();
     }
 
@@ -115,12 +114,9 @@ export function DraggableCubeWithRotation({
   };
 
   const handleCollision = (event: CollisionEnterPayload) => {
-    // 1. Определяем имя объекта, с которым столкнулся куб
     const collisionTargetName = event.other.rigidBodyObject?.name;
 
-    // Проверяем, есть ли у нас звук для этой поверхности
     if (collisionTargetName && collisionTargetName in MATERIAL_SOUNDS) {
-      // Находим аудио-ноду строго по имени столкнувшегося объекта
       const audioNode = audioRefs.current[collisionTargetName];
 
       if (audioNode) {
@@ -133,7 +129,7 @@ export function DraggableCubeWithRotation({
     }
   };
 
-  // 2. ОБНОВЛЕНИЕ КАЖДЫЙ КАДР
+  // ОБНОВЛЕНИЕ КАЖДЫЙ КАДР
   useFrame(() => {
     if (
       !holdingHand ||
@@ -164,7 +160,7 @@ export function DraggableCubeWithRotation({
     rbRef.current.setNextKinematicTranslation(finalPosition.current);
   });
 
-  // 3. КОНЕЦ ЗАХВАТА
+  // КОНЕЦ ЗАХВАТА
   const handleSelectEnd = (event: ThreeEvent<PointerEvent>): void => {
     event.stopPropagation();
 
@@ -189,10 +185,16 @@ export function DraggableCubeWithRotation({
       type={physicsType}
       position={position}
       userData={{ initialPosition }}
-      colliders="cuboid"
+      colliders={false}
       name={name}
       onCollisionEnter={handleCollision}
+      ccd={physicsType === "kinematicPosition"}
     >
+      <CuboidCollider
+        activeCollisionTypes={ActiveCollisionTypes.ALL}
+        args={[0.15, 0.15, 0.15]}
+      />
+
       <mesh
         onPointerDown={handleSelectStart}
         onPointerUp={handleSelectEnd}

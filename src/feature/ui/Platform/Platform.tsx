@@ -9,12 +9,13 @@ import { soundManager } from "@/shared";
 interface PlatformProps {
   isTeleportable?: boolean;
   size: [number, number];
-  position: [number, number, number]; // [x, y, z]
+  position: [number, number, number];
   rotation: ThreeElements["object3D"]["rotation"];
   name: string;
-  soundPath?: string; // Кастомный путь к звуку, если нужен
+  soundPath?: string;
   onTeleport?: () => void;
   color?: string;
+  maxTeleportDistance?: number;
 }
 
 export function Platform({
@@ -25,12 +26,24 @@ export function Platform({
   name,
   rotation,
   onTeleport,
+  maxTeleportDistance = 5,
 }: PlatformProps): React.JSX.Element {
+  const playerPosition = useGameStore((state) => state.playerPosition);
   const setPlayerPosition = useGameStore((state) => state.setPlayerPosition);
 
   const handleTeleport = (targetPosition: THREE.Vector3) => {
-    soundManager.play("teleport");
+    const playerVector = Array.isArray(playerPosition)
+      ? new THREE.Vector3(...playerPosition)
+      : (playerPosition as THREE.Vector3);
 
+    const distance = playerVector.distanceTo(targetPosition);
+
+    if (distance > maxTeleportDistance) {
+      // todo Добавить изменение цвета для не валидной длины луча телепорта
+      return;
+    }
+
+    soundManager.play("teleport");
     setPlayerPosition(targetPosition);
     onTeleport?.();
   };

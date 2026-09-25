@@ -2,7 +2,7 @@ import {
   Platform,
   PLATFORM_HORIZONTAL_ROTATION,
   Table,
-  DraggableCubeWithRotation,
+  DraggableCube,
   TriggerZone,
   StaticText,
 } from "@/feature";
@@ -77,7 +77,7 @@ export function Level1(): JSX.Element {
       <Table position={[-2, 0, -2.5]} name={"table"} size={[0.01, 5, 1]} />
       <Table position={[-2, 1, -1.5]} name={"table"} size={[0.01, 5, 3]} />
       <Table position={[-2, 0, -1.5]} name={"table"} size={[0.01, 0.5, 3]} />
-      <DraggableCubeWithRotation
+      <DraggableCube
         color={"red"}
         position={CUBE_POSITION}
         initialPosition={CUBE_POSITION}
