@@ -33,35 +33,25 @@ export function calculateTeleportArc(
     const len = _segmentVector.length();
 
     _raycaster.set(_currentPoint, _segmentVector.normalize());
-    _raycaster.far = len;
+    // Даем рейкастеру крошечный запас по длине (1 миллиметр),
+    // чтобы гарантированно пробивать стыки полигонов
+    _raycaster.far = len + 0.001;
 
+    // Ищем пересечения только среди заранее отфильтрованных телепортируемых полов
     const intersects = _raycaster.intersectObjects(targetObjects, true);
 
-    // Фильтруем пересечения: игнорируем коллизии ближе 15 см к руке и новые линии Drei
-    const validIntersect = intersects.find((int) => {
-      const type = int.object?.type;
-      const isTooClose = int.distance <= 0.15;
-
-      const isLine =
-        type === "Line2" ||
-        type === "LineSegments2" ||
-        (int.object as any).isLine2;
-
-      return !isTooClose && !isLine;
-    });
+    // 🎯 ИСПРАВЛЕНИЕ: Так как в targetObjects лежат ТОЛЬКО валидные полы,
+    // мы просто берем самое первое пересечение, полностью игнорируя проверку distance!
+    const validIntersect = intersects[0];
 
     if (validIntersect) {
       hitPoint = validIntersect.point;
       arcPoints.push(hitPoint.clone());
-
-      if (validIntersect.object.userData?.isTeleportable === true) {
-        isValidTarget = true;
-      }
-
-      break; // Дуга столкнулась, завершаем параболу
+      isValidTarget = true; // Любое попадание в пол из targetObjects теперь на 100% валидно
+      break;
     }
 
-    // Лимит максимальной длины
+    // Лимит максимальной длины дуги от игрока
     if (originPos.distanceTo(_nextPoint) > 2) break;
 
     _currentPoint.copy(_nextPoint);

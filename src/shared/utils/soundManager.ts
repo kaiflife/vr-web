@@ -1,4 +1,5 @@
-// Словарь со всеми звуками игры и путями к ним в папке public
+import * as THREE from "three";
+
 export const SOUNDS = {
   levelChange: "/sounds/changeLevel.mp3",
   activateTriggerZone: "/sounds/activateTriggerZone.mp3",
@@ -10,48 +11,118 @@ export const SOUNDS = {
 
 type SoundKey = keyof typeof SOUNDS;
 
-// Кэш для хранения уже созданных объектов Audio
-const audioCache: Record<string, HTMLAudioElement> = {};
+// Внутренние системные объекты Three.js для работы со звуком в VR
+let listener: THREE.AudioListener | null = null;
+const audioLoader = new THREE.AudioLoader();
+const soundCache: Record<string, THREE.Audio> = {};
+const bufferCache: Record<string, AudioBuffer> = {};
 
 export const soundManager = {
   /**
-   * Проиграть звук по его ключу
+   * Инициализация аудио-контекста Three.js.
+   * Должна вызваться один раз при старте Canvas или при первом клике.
    */
-  play(key: SoundKey, volume = 1.0) {
-    if (typeof Audio === "undefined") return;
+  init(camera: THREE.Camera) {
+    if (typeof window === "undefined" || listener) return;
 
-    const path = SOUNDS[key];
+    // Создаем слушатель и добавляем его к камере (важно для VR и пространственного звука)
+    listener = new THREE.AudioListener();
+    camera.add(listener);
 
-    // Если звука нет в кэше — создаем его
-    if (!audioCache[path]) {
-      audioCache[path] = new Audio(path);
+    // Сразу запускаем предзагрузку в правильный буфер контекста
+    this.preloadAll();
+
+    this.resume();
+  },
+
+  async resume() {
+    if (!listener || !listener.context) return;
+
+    // Если контекст приостановлен браузером, принудительно запускаем его
+    if (listener.context.state === "suspended") {
+      try {
+        await listener.context.resume();
+        console.log(
+          "🔊 [SoundManager] AudioContext успешно разблокирован жестом!",
+        );
+      } catch (err) {
+        console.error(
+          "❌ [SoundManager] Не удалось разблокировать AudioContext:",
+          err,
+        );
+      }
     }
-
-    const audio = audioCache[path];
-
-    audio.volume = volume;
-    audio.currentTime = 0; // Сброс в начало, если звук уже играет
-
-    audio.play().catch((err) => {
-      // Ловим блокировку звука браузером до первого клика
-      console.debug(
-        `[SoundManager] Воспроизведение "${key}" отложено до взаимодействия:`,
-        err.message,
-      );
-    });
   },
 
   /**
-   * Предзагрузка всех звуков (полезно вызвать на стартовом экране)
+   * Проиграть звук через WebAudio API (работает в Meta Quest 3 без блокировок)
+   */
+  play(key: SoundKey, volume = 1.0) {
+    if (typeof window === "undefined") return;
+
+    const path = SOUNDS[key];
+
+    // Если слушатель еще не создан (например, игра стартовала сразу в VR),
+    // создаем временный базовый слушатель, чтобы звук не терялся
+    if (!listener) {
+      listener = new THREE.AudioListener();
+    }
+
+    // Если звук для этого пути уже был настроен
+    if (soundCache[path]) {
+      const sound = soundCache[path];
+      if (sound.isPlaying) sound.stop(); // Прерываем, если уже играет, чтобы пустить заново
+      sound.setVolume(volume);
+      sound.play();
+      return;
+    }
+
+    // Создаем новый объект звука Three.js
+    const sound = new THREE.Audio(listener);
+    soundCache[path] = sound;
+
+    // Если аудиофайл уже загружен в кэш буферов — запускаем мгновенно
+    if (bufferCache[path]) {
+      sound.setBuffer(bufferCache[path]);
+      sound.setVolume(volume);
+      sound.play();
+      return;
+    }
+
+    // Если файла нет в буфере — лениво загружаем его (первый раз)
+    audioLoader.load(
+      path,
+      (buffer) => {
+        bufferCache[path] = buffer;
+        sound.setBuffer(buffer);
+        sound.setVolume(volume);
+        sound.play();
+      },
+      undefined,
+      (err) => {
+        console.error(`[SoundManager] Ошибка загрузки звука ${key}:`, err);
+      },
+    );
+  },
+
+  /**
+   * Правильная предзагрузка аудиофайлов в бинарные буферы памяти
    */
   preloadAll() {
-    if (typeof Audio === "undefined") return;
+    if (typeof window === "undefined") return;
 
     Object.values(SOUNDS).forEach((path) => {
-      if (!audioCache[path]) {
-        const audio = new Audio(path);
-        audio.preload = "auto";
-        audioCache[path] = audio;
+      if (!bufferCache[path]) {
+        audioLoader.load(
+          path,
+          (buffer) => {
+            bufferCache[path] = buffer;
+          },
+          undefined,
+          (err) => {
+            console.debug(`[SoundManager] Ошибка предзагрузки: ${path}`, err);
+          },
+        );
       }
     });
   },

@@ -32,7 +32,7 @@ export function CustomArcTeleport({ playerPosition }: CustomArcTeleportProps) {
     const isPressed = checkButtonAPressed(gamepad);
 
     if (!isPressed || !state?.inputSource?.targetRaySpace) {
-      // 🎯 МОМЕНТ ПРЫЖКА: Вызываем колбэк, переданный сверху
+      // 🎯 момент телепорта: Вызываем колбэк, переданный сверху
       if (wasPressedRef.current && hitPoint && isValidTarget) {
         setPlayerPosition(hitPoint.clone());
       }
