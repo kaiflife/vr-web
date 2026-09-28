@@ -16,7 +16,11 @@ export const useGameStore = create<GameState>((set) => ({
   playerPosition: new THREE.Vector3(0, 0, 0),
   currentLevel: "level0",
 
-  setPlayerPosition: (position) => set({ playerPosition: position }),
+  setPlayerPosition: (position) => {
+    set({ playerPosition: position });
+
+    soundManager.play("teleport");
+  },
 
   changeLevel: (level) => {
     set({

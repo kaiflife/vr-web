@@ -21,6 +21,7 @@ interface IDraggableCube {
 
 const MATERIAL_SOUNDS = {
   floor: SOUNDS.cubeDrop2,
+  nextLevel: SOUNDS.levelChange,
   table: SOUNDS.cubeDrop2,
   player: SOUNDS.grab,
 } as const;

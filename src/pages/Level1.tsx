@@ -1,13 +1,12 @@
 import {
   Platform,
   PLATFORM_HORIZONTAL_ROTATION,
-  Table,
-  DraggableCube,
-  TriggerZone,
   StaticText,
-} from "@/feature";
-import { DeadZone } from "@/feature/ui/DeadZone";
+  Table,
+} from "@/entities";
+import { TriggerZone, DraggableCube } from "@/features";
 import { SOUNDS, useTimeout } from "@/shared";
+import { DeadZone } from "@/widgets";
 import { useRef, type JSX } from "react";
 import * as THREE from "three";
 

@@ -1,4 +1,4 @@
-import { TriggerZone } from "@/feature/ui/TriggerZone/TriggerZone";
+import { TriggerZone } from "@/features";
 import { SOUNDS, type CustomRapierRigidBody } from "@/shared";
 
 interface IProps {

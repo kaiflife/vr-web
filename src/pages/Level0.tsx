@@ -1,10 +1,8 @@
-import { useGameStore } from "@/entities";
-import { Platform, PLATFORM_HORIZONTAL_ROTATION, StaticText } from "@/feature";
+import { Platform, PLATFORM_HORIZONTAL_ROTATION, StaticText } from "@/entities";
+
 import { type JSX } from "react";
 
 export function Level0(): JSX.Element {
-  const changeLevel = useGameStore((state) => state.changeLevel);
-
   return (
     <group>
       <Platform
@@ -15,14 +13,11 @@ export function Level0(): JSX.Element {
         rotation={PLATFORM_HORIZONTAL_ROTATION}
       />
       <Platform
-        name="floor"
+        name="nextLevel"
         isTeleportable
         size={[0.5, 0.5]}
         position={[0, 0.001, 1.25]}
         rotation={PLATFORM_HORIZONTAL_ROTATION}
-        onTeleport={() => {
-          changeLevel("level1");
-        }}
         color="white"
       />
       <StaticText
