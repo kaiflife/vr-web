@@ -1,19 +1,22 @@
 import React from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { XR, XROrigin } from "@react-three/xr";
+import { XR } from "@react-three/xr";
 
 import "./App.css";
 import { Physics } from "@react-three/rapier";
 import { DEFAULT_CAMERA } from "./constants";
-import { SceneLight, useGameStore } from "@/entities";
+import { ControllerGrabSystem, SceneLight, useGameStore } from "@/entities";
 import { LEVEL_COMPONENTS } from "@/app/config/levels";
 import { xrStore } from "@/app/model/xtStore";
 import { CustomArcTeleport } from "@/features";
+import { VRPlayer } from "@/shared";
 
 export default function App(): React.JSX.Element {
-  const playerPosition = useGameStore((state) => state.playerPosition);
+  // Реактивно следим только за уровнем, чтобы переключать сцены
   const currentLevel = useGameStore((state) => state.currentLevel);
+  // Забираем начальную позицию один раз без постоянной подписки на ререндеры всего App
+  const initialPlayerPosition = useGameStore.getState().playerPosition;
 
   const CurrentLevelComponent = LEVEL_COMPONENTS[currentLevel];
 
@@ -23,8 +26,11 @@ export default function App(): React.JSX.Element {
         <SceneLight />
 
         <XR store={xrStore}>
-          <XROrigin position={playerPosition} />
-          <CustomArcTeleport playerPosition={playerPosition} />
+          <ControllerGrabSystem />
+
+          <VRPlayer />
+
+          <CustomArcTeleport playerPosition={initialPlayerPosition} />
 
           <Physics gravity={[0, -9.81, 0]}>
             <CurrentLevelComponent />

@@ -1,8 +1,15 @@
-import { Platform, PLATFORM_HORIZONTAL_ROTATION, StaticText } from "@/entities";
+import {
+  LEVEL_FINISHES,
+  Platform,
+  PLATFORM_HORIZONTAL_ROTATION,
+  StaticText,
+} from "@/entities";
 
-import { type JSX } from "react";
+export function Level0() {
+  const finishPosition = LEVEL_FINISHES.level0;
 
-export function Level0(): JSX.Element {
+  if (!finishPosition) return null;
+
   return (
     <group>
       <Platform
@@ -16,7 +23,7 @@ export function Level0(): JSX.Element {
         name="nextLevel"
         isTeleportable
         size={[0.5, 0.5]}
-        position={[0, 0.001, 1.25]}
+        position={finishPosition}
         rotation={PLATFORM_HORIZONTAL_ROTATION}
         color="white"
       />

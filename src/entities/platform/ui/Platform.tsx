@@ -1,6 +1,8 @@
 import { RigidBody } from "@react-three/rapier";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import type { ThreeElements } from "@react-three/fiber";
+import type { Mesh } from "three";
+import { TeleportRegistry } from "@/shared";
 
 interface PlatformProps {
   isTeleportable?: boolean;
@@ -20,11 +22,28 @@ export function Platform({
   name,
   rotation,
 }: PlatformProps): React.JSX.Element {
+  const meshRef = useRef<Mesh>(null);
+
+  useEffect(() => {
+    // Если платформа не предназначена для телепортации, вообще не вносим её в реестр
+    if (!isTeleportable) return;
+
+    const mesh = meshRef.current;
+    if (!mesh) return;
+
+    // 🚀 ТЕПЕРЬ РАБОТАЕТ: Регистрируем этот меш в глобальном списке
+    TeleportRegistry.add(mesh);
+
+    return () => {
+      TeleportRegistry.remove(mesh);
+    };
+  }, [isTeleportable]); // Добавили в зависимости для надежности
+
   return (
     <RigidBody type="fixed" name={name} position={position} rotation={rotation}>
-      <mesh userData={{ isTeleportable }}>
+      <mesh ref={meshRef}>
         <planeGeometry args={size} />
-        <meshStandardMaterial color={color} />
+        <meshStandardMaterial color={color} side={2} />
       </mesh>
     </RigidBody>
   );

@@ -1,13 +1,28 @@
 import { useXRInputSourceState } from "@react-three/xr";
-import { useRef, useState } from "react";
-import { Object3D, Vector3 } from "three";
-import { useFrame } from "@react-three/fiber";
-import { Line } from "@react-three/drei";
+import { useRef } from "react";
+import { Vector3, Mesh, Group, MeshBasicMaterial, Color } from "three";
+import { useFrame, extend } from "@react-three/fiber";
+import { Line2 } from "three/examples/jsm/lines/Line2.js";
+import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
+import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { checkButtonAPressed } from "../lib/checkButtonAPressed";
 import { calculateControllerRay } from "../lib/calculateControllerRay";
-import { filterSceneObjects } from "../lib/filterSceneObjects";
 import { calculateTeleportArc } from "../lib/calculateTeleportArc";
 import { useGameStore } from "@/entities";
+import { TeleportRegistry } from "@/shared";
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      line2: any;
+      lineGeometry: any;
+      lineMaterial: any;
+    }
+  }
+}
+
+// Регистрируем тяжелые нативные элементы Three.js в системе Fiber, чтобы использовать их как JSX tags
+extend({ Line2, LineGeometry, LineMaterial });
 
 interface CustomArcTeleportProps {
   playerPosition: Vector3;
@@ -15,39 +30,46 @@ interface CustomArcTeleportProps {
 
 const _worldPos = new Vector3();
 const _worldDir = new Vector3();
+const _finalHitPoint = new Vector3();
+
+const COLOR_VALID = new Color("#00ff00");
+const COLOR_INVALID = new Color("#ff0000");
 
 export function CustomArcTeleport({ playerPosition }: CustomArcTeleportProps) {
-  const setPlayerPosition = useGameStore((state) => state.setPlayerPosition);
-  const teleportableObjectsRef = useRef<Object3D[]>([]);
-
   const state = useXRInputSourceState("controller", "right");
   const wasPressedRef = useRef(false);
 
-  const [points, setPoints] = useState<Vector3[]>([]);
-  const [hitPoint, setHitPoint] = useState<Vector3 | null>(null);
-  const [isValidTarget, setIsValidTarget] = useState(false);
+  const visualGroupRef = useRef<Group>(null);
+  const lineRef = useRef<any>(null); // Реф на нашу кастомную линию <line2>
+  const ringRef = useRef<Mesh>(null);
+
+  const pointsBufferRef = useRef<Vector3[]>(
+    Array.from({ length: 40 }, () => new Vector3()),
+  );
+
+  // Выделяем плоский массив памяти под 40 точек (120 координат)
+  const positionsFloatArrayRef = useRef(new Float32Array(120));
 
   useFrame((fiberState) => {
     const gamepad = state?.inputSource?.gamepad;
     const isPressed = checkButtonAPressed(gamepad);
 
+    const visualGroup = visualGroupRef.current;
+    const line = lineRef.current;
+    const ring = ringRef.current;
+
     if (!isPressed || !state?.inputSource?.targetRaySpace) {
-      // 🎯 момент телепорта: Вызываем колбэк, переданный сверху
-      if (wasPressedRef.current && hitPoint && isValidTarget) {
-        setPlayerPosition(hitPoint.clone());
+      if (wasPressedRef.current && visualGroup?.visible && ring?.visible) {
+        const setPlayerPosition = useGameStore.getState().setPlayerPosition;
+        setPlayerPosition(_finalHitPoint);
       }
-      if (points.length > 0) setPoints([]);
-      if (hitPoint) setHitPoint(null);
 
-      setIsValidTarget(false);
+      if (visualGroup && visualGroup.visible) {
+        visualGroup.visible = false;
+      }
+
       wasPressedRef.current = false;
-
-      teleportableObjectsRef.current = [];
       return;
-    }
-
-    if (teleportableObjectsRef.current.length === 0) {
-      teleportableObjectsRef.current = filterSceneObjects(fiberState.scene);
     }
 
     wasPressedRef.current = true;
@@ -59,38 +81,96 @@ export function CustomArcTeleport({ playerPosition }: CustomArcTeleportProps) {
       _worldPos,
       _worldDir,
     );
-    if (!success) return;
 
-    const result = calculateTeleportArc(
+    if (!success) {
+      if (visualGroup) visualGroup.visible = false;
+      return;
+    }
+
+    const teleportableObjects = TeleportRegistry.getObjects();
+
+    const { count, isValidTarget } = calculateTeleportArc(
       _worldPos,
       _worldDir,
-      teleportableObjectsRef.current,
+      teleportableObjects,
+      pointsBufferRef.current,
+      _finalHitPoint,
     );
 
-    setPoints(result.arcPoints);
-    setHitPoint(result.hitPoint);
-    setIsValidTarget(result.isValidTarget);
+    if (visualGroup) {
+      visualGroup.visible = true;
+
+      if (line && line.geometry) {
+        const floatArray = positionsFloatArrayRef.current;
+        const points = pointsBufferRef.current;
+
+        // Заполняем плоский массив новыми координатами
+        for (let i = 0; i < count; i++) {
+          const index = i * 3;
+          floatArray[index] = points[i].x;
+          floatArray[index + 1] = points[i].y;
+          floatArray[index + 2] = points[i].z;
+        }
+
+        // 🚀 НАДЕЖНЫЙ МЕТОД ОБНОВЛЕНИЯ ВЕРШИН В THREE.JS:
+        // Передаем только ту часть массива, которая заполнена (count * 3)
+        // Использование подмассива .subarray() делает срез мгновенно и без выделения новой памяти
+        line.geometry.setPositions(floatArray.subarray(0, count * 3));
+
+        // 🚀 КЛЮЧЕВОЙ ФИКС: Принудительно заставляем Three.js пересчитать размеры и индексы шейдера линии
+        line.geometry.computeBoundingSphere();
+        line.geometry.computeBoundingBox();
+
+        // Обновляем цвет линии
+        if (line.material) {
+          line.material.color.copy(isValidTarget ? COLOR_VALID : COLOR_INVALID);
+        }
+      }
+
+      if (ring) {
+        if (isValidTarget) {
+          ring.visible = true;
+          ring.position.copy(_finalHitPoint);
+          const ringMaterial = ring.material as MeshBasicMaterial;
+          if (ringMaterial) ringMaterial.color.copy(COLOR_VALID);
+        } else {
+          ring.visible = false;
+        }
+      }
+    }
   });
 
-  if (points.length === 0) return null;
+  // Настраиваем адаптивное разрешение толщины линии под размер экрана шлема
+  useFrame((fiberState) => {
+    if (lineRef.current?.material) {
+      lineRef.current.material.resolution.set(
+        fiberState.size.width,
+        fiberState.size.height,
+      );
+    }
+  });
 
   return (
-    <group name="teleport-system-visuals">
-      <Line
-        points={points}
-        color={isValidTarget ? "#00ff00" : "#ff0000"}
-        lineWidth={4}
-      />
-      {hitPoint && (
-        <mesh position={hitPoint} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.15, 0.22, 32]} />
-          <meshBasicMaterial
-            color={isValidTarget ? "#00ff00" : "#ff0000"}
-            side={2}
-            depthTest={false}
-          />
-        </mesh>
-      )}
+    <group ref={visualGroupRef} name="teleport-system-visuals" visible={false}>
+      {/* 🚀 ИСПОЛЬЗУЕМ НАШУ ДОЛГОВЕЧНУЮ ЛИНИЮ */}
+      {/* @ts-ignore */}
+      <line2 ref={lineRef} frustumCulled={false}>
+        {/* @ts-ignore */}
+        <lineGeometry />
+        {/* @ts-ignore */}
+        <lineMaterial linewidth={4} transparent depthTest={true} />
+      </line2>
+
+      <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.15, 0.22, 32]} />
+        <meshBasicMaterial
+          side={2}
+          depthTest={true}
+          polygonOffset={true}
+          polygonOffsetFactor={-4}
+          polygonOffsetUnits={-4}
+        />
+      </mesh>
     </group>
   );
 }

@@ -1,11 +1,12 @@
 import { Matrix4, type Vector3 } from "three";
 
 const _matrix = new Matrix4();
+const _rotationMatrix = new Matrix4(); // 🚀 Вынесено из функции во избежание аллокации памяти
 
 export function calculateControllerRay(
   fiberState: any,
   targetRaySpace: any,
-  playerPosition: any, // Может быть массивом [number, number, number] или Vector3
+  playerPosition: any,
   outWorldPos: Vector3,
   outWorldDir: Vector3,
 ): boolean {
@@ -20,11 +21,12 @@ export function calculateControllerRay(
   // 1. Извлекаем локальные данные из WebXR матрицы
   _matrix.fromArray(pose.transform.matrix);
   outWorldPos.setFromMatrixPosition(_matrix);
-  outWorldDir
-    .set(0, 0, -1)
-    .applyMatrix4(new Matrix4().extractRotation(_matrix));
 
-  // 2. Складываем с playerPosition (обрабатываем и Vector3, и обычный массив [x,y,z])
+  // 🚀 Оптимизировано: извлекаем ротацию в переиспользуемую матрицу
+  _rotationMatrix.extractRotation(_matrix);
+  outWorldDir.set(0, 0, -1).applyMatrix4(_rotationMatrix);
+
+  // 2. Складываем с playerPosition
   if (playerPosition && (playerPosition as Vector3).isVector3) {
     outWorldPos.add(playerPosition as Vector3);
   } else if (Array.isArray(playerPosition)) {
